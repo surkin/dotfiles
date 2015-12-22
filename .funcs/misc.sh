@@ -41,17 +41,6 @@ nj() {
   done
 }
 
-# Docker.
-docker-clean() {
-  docker rm $(docker ps -a -q)
-  docker rmi $(docker images -q)
-}
-
-docker-zsh() {
-  local TAG=$1
-  docker run -v /tmp:/host_tmp:rw -i -t $TAG /bin/zsh
-}
-
 # Thread functions.
 ps-threads() { ps -C $1 -L -opsr,pid,ppid,lwp,state }
 watch-threads() { watch -n 1 ps -C $1 -L -opsr,pid,ppid,lwp,state }
@@ -64,18 +53,6 @@ crontab() {
   else $CRONTABCMD $@; fi
 }
 
-# Infinitely loop commands.
-inf() {
-  while true; do
-    zsh -ci "source $HOME/.zshrc; $* ;"
-    [[ $? == 0 ]] || return
-  done;
-}
-
-memo() {
-  echo "$*" | mail -n -s "$*" bamos@cmu.edu
-}
-
 function stopwatch(){
   case $(uname) in
     "Linux") DATE=date ;;
@@ -86,33 +63,6 @@ function stopwatch(){
     echo -ne "$($DATE -u --date @$((`$DATE +%s` - $BEGIN)) +%H:%M:%S)\r";
   done
 }
-
-# https://github.com/matthewmccullough/scripts/blob/master/git-finddirty
-git-dirty() {
-  OLDIFS=$IFS; IFS=$'\n'
-
-  for gitprojpath in `find . -type d -name .git|sort|sed "s/\/\.git//"`; do
-    pushd . >/dev/null
-    cd $gitprojpath
-    isdirty=$(git status -s | grep "^.*")
-    if [ -n "$isdirty" ]; then
-      echo "DIRTY:" $gitprojpath
-    fi
-    popd >/dev/null
-  done
-  IFS=$OLDIFS
-}
-
-git-clonecd() {
-  local TMP=$(mktemp /tmp/gcloc-XXXXXX)
-  git clone $@ 2>&1 | tee $TMP
-  local DIR=$(grep "Cloning into" $TMP | sed -e "s/Cloning into '\(.*\)'.*/\1/g")
-  if [[ ! -z $DIR ]]; then
-    cd $DIR
-  fi
-  rm $TMP
-}
-alias gcloc='git-clonecd'
 
 sys-find() {
   find / -name $@ 2>/dev/null
@@ -142,12 +92,10 @@ alias chax='chmod a+x'
 alias h='hostname'
 alias i-ext='curl icanhazip.com'
 alias li='libreoffice'
-alias psg='ps aux | grep'
 alias rh='rehash'
 alias sudo='nocorrect sudo'
 alias xa='xrandr --auto'
 alias xax='xrandr --auto; exit'
-alias dual='xrandr --output VGA1 --right-of LVDS1 --auto'
 alias dx='dual; exit'
 alias ..='cd ..'
 alias ...='cd ../..'
@@ -180,6 +128,7 @@ alias f='sudo $(fc -ln -1)'
 alias emacsd='emacs --daemon'
 alias e='emacsclient -nw'
 
+alias psg='ps aux | grep'
 alias psgrep='ps aux | grep'
 
 alias clauncher='chromium --show-app-list'
